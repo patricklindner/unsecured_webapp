@@ -1,0 +1,14 @@
+---
+spring:
+  config:
+    activate:
+      on-profile: ssl
+
+server:
+  ssl:
+    key-store: "classpath:localhost-ssl.p12"
+    key-store-type: "PKCS12"
+    key-alias: "localhost"
+    enabled: true
+    key-store-password: "s3cret"
+
