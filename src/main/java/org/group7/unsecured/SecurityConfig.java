@@ -38,16 +38,18 @@ public class SecurityConfig {
                 .authorizeHttpRequests(c ->
                         c.requestMatchers("/secured")
                                 .authenticated()
-                                .requestMatchers("/login")
-                                .permitAll()
                                 .anyRequest()
                                 .permitAll()
                 )
-                .formLogin(c -> c.defaultSuccessUrl("/secured").loginPage("/login").permitAll().loginProcessingUrl("/login").permitAll())
+                .formLogin(c -> c
+                        .defaultSuccessUrl("/secured")
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                )
                 .authenticationProvider(new AuthenticationProvider() {
                     @Override
                     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-                        if (authentication.getPrincipal().toString().equals("user") && authentication.getCredentials().toString().equals("s3cret")) {
+                        if (authentication.getPrincipal().toString().equals("joe") && authentication.getCredentials().toString().equals("s3cret")) {
                             return new UsernamePasswordAuthenticationToken(authentication.getPrincipal(), authentication.getCredentials(), null);
                         } else {
                             return null;

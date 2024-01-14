@@ -2,7 +2,7 @@
 spring:
   config:
     activate:
-      on-profile: ssl
+      on-profile: https
 
 server:
   ssl:
@@ -11,4 +11,7 @@ server:
     key-alias: "localhost"
     enabled: true
     key-store-password: "s3cret"
+
+
+
 

@@ -5,13 +5,21 @@
           integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <title>Unsecured Web Application</title>
 </head>
-<body>
-<div class="flex-box">
-    <h4>This is a secured page which only authenticated users can view.</h4>
+<body style="background: #e0e0e0">
 
+<div class="container pt-5">
+
+    <h4 style="text-align: center">Welcome user: <label th:text="${username}"></label></h4>
     <form action="/secured" method="POST">
-        <input placeholder="Tell me a secret" name="privateData">
-        <input type="submit" value="Save" cla>
+        <div class="d-flex justify-content-center flex-column gap-2 align-items-center">
+            <div class="d-flex justify-content-center flex-column gap-2" style="width: 300px">
+                <input placeholder="Tell me a secret" name="privateData" class="input-group-text">
+                <input type="submit" value="Save" class="btn btn-primary">
+                <a href="/logout" class="d-flex flex-column">
+                    <input type="button" value="Logout" class="btn btn-danger">
+                </a>
+            </div>
+        </div>
     </form>
 </div>
 </body>
