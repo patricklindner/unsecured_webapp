@@ -11,6 +11,11 @@ import org.springframework.web.servlet.view.RedirectView;
 @Controller
 public class ViewController {
 
+    @GetMapping("/")
+    public RedirectView redirectRootContext() {
+        return new RedirectView("secured");
+    }
+
     @GetMapping("/login")
     public String login() {
         return "login";

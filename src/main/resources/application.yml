@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 ---
 spring:
   config:
@@ -11,6 +14,7 @@ server:
     key-alias: "localhost"
     enabled: true
     key-store-password: "s3cret"
+  port: 8443
 
 
 
