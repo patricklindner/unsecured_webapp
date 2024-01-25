@@ -17,8 +17,12 @@ public class ViewController {
     }
 
     @GetMapping("/login")
-    public String login() {
-        return "login";
+    public String login(Authentication authentication) {
+        if(authentication != null && authentication.isAuthenticated()) {
+            return "redirect:/";
+        } else {
+            return "login";
+        }
     }
 
     @GetMapping("/secured")
