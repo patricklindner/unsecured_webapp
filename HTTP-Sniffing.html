@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Sniffing and Utilizing unencrypted HTTP Packages</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="sniffing-and-utilizing-unencrypted-http-packages">Sniffing and Utilizing unencrypted HTTP Packages</h1>
+<p>During this lab you will be introduced to the security risks that aris when using non-secure connections. You will work
+with a locally hosted <code>Docker</code> $$container and <code>Wireshark</code>. Both tools are already installed on your Kali VM or can
+easily be installed on both Windows and Linux.
+The web application hosted in the docker container, runs default without any encryption. While this is bad practice,
+numerous websites are still not using SSL based encryption and rather operate on unencrypted http connections.
+This lab will show you the risks of not securing your connections and using unsecure connections.</p>
+<p>The hints are encoded in base64. They can be decoded by using <code>echo &lt;hint&gt; | base64 -d</code> or
+with <a href="'https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true,false)'">online tools</a></p>
+<h1 id="docker">Docker</h1>
+<h2 id="setup">Setup</h2>
+<p>In order to run the vulnerable Web application, download and install docker on your machine (if not yet installed). The
+instructions can be found on the <a href="https://docs.docker.com/engine/install/">docker website</a>.
+When docker is installed and running in the background, run the following command in the command line:</p>
+<pre><code>docker run -p 8080:8080 patricklindner/unsecured_webapp:1.0
+</code></pre>
+<p>This command downloads the desired Docker image from the docker hub and stars a local container from it. All network
+traffic on
+port 8080 to the port 8080 of the Docker container.
+If you are using a Linux distribution, this command might require superuser privileges, depending on your installation.
+Therefore, prepend the command with <code>sudo</code>. Wait until the image has been downloaded and started, and you see
+the log message</p>
+<pre><code>Completed initialization in &lt;number of milliseconds&gt; ms
+</code></pre>
+<p>Afterward, the web application can be accessed using the browser
+on <a href="http://localhost:8080/login">http://localhost:8080/login</a>.</p>
+<h1 id="wireshark">Wireshark</h1>
+<h2 id="setup-1">Setup</h2>
+<p>In order to inspect network traffic, we will use Wireshark. Download and install it on your machine (installed on Kali already). See their <a href="https://www.wireshark.org/download.html">website</a> for installation instructions. In order to
+listen to the
+traffic between the web application and your browser, run it as administrator and select the network loop back interface
+named <code>lo</code>. Type <code>http</code> in the filter bar, and access the web application
+at <a href="http://localhost/login">http://localhost/login</a> via the browser. You should now be able to see multiple packets,
+which are exchanged between the browser and the web application. Since the connection is not encrypted, we can see the
+content of each package.</p>
+<h2 id="usage">Usage</h2>
+<h3 id="reading-data">Reading data</h3>
+<p>In order to simulate attacks connect in the browsers to the web application
+at <a href="http://localhost:8080/login">http://localhost:8080/login</a>. Login using user <code>joe</code> and password <code>s3cret</code>. You should be
+logged
+in now and see the secured content of the web application.</p>
+<p>In Wireshark, find the package with the info <code>POST /login HTTP/1.1</code>. This is the HTTP post request which transmits the
+username and the password to the server. In the background, the server checks the validity of the credentials, and
+creates a new session for the browser. Click the package and find the HTML Form URL Encoded entry at the left bottom
+panel. You should now be able to see the credentials, you inserted in the browser. A potential attacker could use that
+information to login in to-, and control the, the victim's account.</p>
+<p><em>Since this method is very basic, most modern web application are protected against that by not transmitting the clear
+text, but an encrypted version of the password.</em></p>
+<p>Explore additional information by sending requests through the browser and analyzing the captured data in Wireshark. For
+example, attempt to transmit a confidential piece of information while logged in, noting that this data is also sent in
+plain text. Despite the user's expectation of security while being logged in, it's important to test whether the
+transmitted data remains secure and unreadable in the event of unauthorized interception or sniffing.</p>
+<h3 id="session-hijacking">Session Hijacking</h3>
+<p>With the given setup, it is also very easy to gain access to a user's secured account by sniffing their session ID.
+Since the session ID is the only thing used by the server to identify a browser (and therefore a potentially
+authenticated account), stealing it enabled the attacker to impersonate the victim user.
+This is very helpful in scenarios, where the browser encrypts the password before transmission.</p>
+<ol>
+<li>Log in the web application at <a href="http://localhost:8080/login">http://localhost:8080/login</a> and capture any of the http packets which are sent from
+the browser to the server.</li>
+<li>Find the http section in the wireshark's packet inspector called Hyper Transfer Protocol. In that section find the
+cookie section and open it. Here you can read all cookies that have been sent in that specific request. We are
+specifically interested in the cookie called JSESSIONID.
+This is the session ID of our victim, which we can use to hijack their session. Copy the value of this cookie to your clipboard.</li>
+<li>Open a new browser tab in private mode. In this mode, the browser does not share any cookies with the tabs.
+Therefore,
+in private mode, the browser is not logged in the application.
+Verify that the private tab is not logged in by accessing <a href="http://localhost:8080">http://localhost:8080</a>. If you are not logged in, you
+should be redirected
+to the login page.</li>
+<li>In the private tab, we can now change the value of the JSESSIONID cookie in order to impersonate the victim. Open the
+browsers developer menu, navigate to the cookies tab, and paste the copied JSESSIONID into the JSESSIONID cookie of
+the
+private tab.</li>
+<li>Reload the page, you are successfully logged in as the victim.</li>
+</ol>
+<h3 id="stealing-private-data">Stealing Private Data</h3>
+<p>Not only passwords, but all data packets that are transmitted unencrypted between the browser and the server can be
+sniffed.
+In this section we try to steal form data, which the user sends to the server. This attack works very similar to the
+first one, where the password is sniffed. However, the goal is different. We sniff the password in order to impersonate
+as the victim. Logging in with the sniffed password could leave traces on the server logs of the attackers IP address.
+In this attack, w use the same sniffing technique for different data.</p>
+<ol>
+<li>Log in as the user joe and listen in wireshark to any http packets on the loopback interface.</li>
+<li>After login, you will find a textbox, which asks for a secret. This secret can be sniffed by wireshark in the same
+way as the password from the first attack. Fill some text into the textbox and hit the <code>Save</code> button.</li>
+<li>After saving, you should be able to see the transmitted http package starting with <code>POST /secured</code>. In that package,
+the
+secret private data from the textbox, can easily be red by the attacker.</li>
+</ol>
+<h1 id="secured-connection">Secured Connection</h1>
+<p>We now know, how easily unencrypted HTTP packets can be sniffed by a potential attacker. Let us prevent the three
+attacks by encrypting the data traffic. In order to encrypt HTTP packets, we make use of Transport Layer Security (TLS),
+the newer version of Secured Socket Layer (SSL). Using this encryption, we switch from the HTTP, to the HTTPS protocol.</p>
+<p>Since TLS makes use of asynchronous encryption, the application server requires a public and a private key.
+In order to create those keys, we make use of javas keytool command line tool. We invoke the following command:</p>
+<pre><code>keytool -genkeypair -alias &lt;a name for your key&gt; -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore keystore.p12 -validity 3650
+</code></pre>
+<p>This command creates an RSA key pair with the alias my_key and stores it in the output file keystore.p12 in
+industry standard PKCS12 format.</p>
+<p>After running the command, you have to define a password, that encrypts the keystore file. Furthermore, additional
+information, like the creators name and the organizations name are requested. All of those information can be left
+blank, since we host the application locally.</p>
+<p>When the keystore has been created, we can restart the docker application with the keystore.</p>
+<p>Run the following command from the folder where <code>keystore.p12</code> is located:</p>
+<pre><code>sudo docker run -v .:/cert -p 8443:8443 patricklindner/unsecured_webapp:1.0 
+   --spring.profiles.active=https 
+   --server.ssl.key-store=cert/keystore.p12 
+   --server.ssl.key-store-password=&lt;password to keystore.p12&gt; 
+   --server.ssl.key-alias=&lt;your alias&gt;
+</code></pre>
+<p><em> For some systems: replace .:/cert with &quot;$(pwd)&quot;:/cert </em></p>
+<p>The HTTP traffic of the application is now encrypted and unreadable by potential attackers.
+Verify this by repeating the three attacks. The application is now accessible at <a href="https://localhost:8443">https://localhost:8443</a>.
+When accessing the app, your browser should issue a security warning about the used TLS certificate.
+Browsers do only trust certificates which have been signed by a trusted central authority (CA). These CSa are hardcoded
+into the browser.
+Since our key is not signed by any CA, but by itself, the browser does not trust it. This does not make the connection
+less secure. The browser merely warns you that the origin of the certificate is not known. It could potentially be a faked website.
+When using HTTPS in production, you can let your key be signed by a central authority in order to make your certificate trustworthy.
+Read more over CAs <a href="https://www.digicert.com/blog/what-is-a-certificate-authority">here</a>.</p>
+<p>In Wireshark, instead of filtering by http, change the filter setting to tls.
+You can now see all encrypted data packets. Since wireshark (the potential attacker) does not know the encryption key,
+the contents of all data packets can not be read.</p>
+<h1 id="exercises">Exercises</h1>
+<h2 id="reading-data-1">Reading Data</h2>
+<p><strong>Q: How is the password presented? (format: .... ....: &quot;password&quot; = ........)</strong></p>
+<p><strong>Q: Follow the TCP trace of the request, what is the class of the button with value=&quot;Logout&quot;? (format:&quot;... ...-.......&quot;)</strong></p>
+<blockquote>
+<p>Hint: UmlnaHQtY2xpY2sgb24gdGhlIHBhY2thZ2UgPiBGb2xsb3cgPiBUQ1Agc3RyZWFtLg==</p>
+</blockquote>
+<h2 id="session-hijacking-1">Session Hijacking</h2>
+<p><strong>Q: How is the session cookie presented? (format: ...... ....: JSESSIONID=*)</strong></p>
+<p><strong>Q: What is the max age of the cookie?</strong></p>
+<blockquote>
+<p>Hint: VXNlIGRldmVsb3BlciB0b29scywgY2xpY2sgb24gdGhlIGNvb2tpZSBhbmQgZXhwbG9yZSB0aGUgYWRkaXRpb25hbCBpbmZv</p>
+</blockquote>
+<p><strong>Q: What happens with the hijacked session when you logout in the original browser?</strong></p>
+<h2 id="stealing-private-data-1">Stealing Private Data</h2>
+<p><strong>Q: What is the key of the form item?</strong></p>
+<p><strong>Q: What is the protocol used to communicate the secret?</strong></p>
+<p><strong>Q: What is the HTTP method used to communicate the secret?</strong></p>
+<h2 id="secured-connection-1">Secured Connection</h2>
+<p><strong>Q: What country code is requested to create the keypair? (format: ...-......)</strong></p>
+<p><strong>Q: How many days is the generated key valid?</strong></p>
+<p><strong>Q: What is the Signature Algorithm of the certificate? (format: ...-... .... ... ..........)</strong></p>
+<blockquote>
+<p>Hint: R28gdG8gdGhlIGJyb3dzZXIsIGluIHRoZSBhZGRyZXNzIGJhciBjbGljayBvbiB0aGUgbG9jay4gVmlldyB0aGUgY2VydGlmaWNhdGUu</p>
+</blockquote>
+<p><strong>Q: Redo the attacks and read the data. What is the protocol now?</strong></p>
+<h1 id="additional-material">Additional material</h1>
+<ul>
+<li><a href="https://www.digicert.com/blog/what-is-a-certificate-authority">Certifate Authority</a></li>
+<li><a href="https://kinsta.com/knowledgebase/tls-vs-ssl/">TLS vs SSL</a></li>
+<li><a href="https://www.cerberusftp.com/blog/how-secure-is-ftp-how-you-can-mitigate-the-risks-of-using-file-transfer-protocol/">FTP</a></li>
+</ul>
+
+            <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+            
+        </body>
+        </html>

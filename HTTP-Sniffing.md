@@ -1,11 +1,11 @@
-# Introduction
+# Sniffing and Utilizing unencrypted HTTP Packages
 
 During this lab you will be introduced to the security risks that aris when using non-secure connections. You will work
 with a locally hosted `Docker` $$container and `Wireshark`. Both tools are already installed on your Kali VM or can
 easily be installed on both Windows and Linux.
 The web application hosted in the docker container, runs default without any encryption. While this is bad practice,
 numerous websites are still not using SSL based encryption and rather operate on unencrypted http connections.
-This lab will show you the risks of not securing your connections or using unsecure connections.
+This lab will show you the risks of not securing your connections and using unsecure connections.
 
 The hints are encoded in base64. They can be decoded by using `echo <hint> | base64 -d` or
 with [online tools]('https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true,false)')
