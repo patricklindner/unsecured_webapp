@@ -1,7 +1,7 @@
 # Sniffing and Utilizing unencrypted HTTP Packages
 
 During this lab you will be introduced to the security risks that aris when using non-secure connections. You will work
-with a locally hosted `Docker` $$container and `Wireshark`. Both tools are already installed on your Kali VM or can
+with a locally hosted `Docker` and `Wireshark`. Both tools are already installed on your Kali VM or can
 easily be installed on both Windows and Linux.
 The web application hosted in the docker container, runs default without any encryption. While this is bad practice,
 numerous websites are still not using SSL based encryption and rather operate on unencrypted http connections.
@@ -11,6 +11,7 @@ The hints are encoded in base64. They can be decoded by using `echo <hint> | bas
 with [online tools]('https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true,false)')
 
 # Docker
+
 ## Setup
 
 In order to run the vulnerable Web application, download and install docker on your machine (if not yet installed). The
@@ -23,7 +24,7 @@ docker run -p 8080:8080 patricklindner/unsecured_webapp:1.0
 
 This command downloads the desired Docker image from the docker hub and stars a local container from it. All network
 traffic on
-port 8080 to the port 8080 of the Docker container.
+port 8080 is rerouted to port 8080 of the Docker container.
 If you are using a Linux distribution, this command might require superuser privileges, depending on your installation.
 Therefore, prepend the command with `sudo`. Wait until the image has been downloaded and started, and you see
 the log message
@@ -39,36 +40,44 @@ on http://localhost:8080/login.
 
 ## Setup
 
-In order to inspect network traffic, we will use Wireshark. Download and install it on your machine (installed on Kali already). See their [website](https://www.wireshark.org/download.html) for installation instructions. In order to
+In order to inspect network traffic, we will use Wireshark. Download and install it on your machine (installed on Kali
+already). See their [website](https://www.wireshark.org/download.html) for installation instructions. In order to
 listen to the
 traffic between the web application and your browser, run it as administrator and select the network loop back interface
 named `lo`. Type `http` in the filter bar, and access the web application
-at http://localhost/login via the browser. You should now be able to see multiple packets,
+at http://localhost:8080/login via the browser. You should now be able to see multiple packets,
 which are exchanged between the browser and the web application. Since the connection is not encrypted, we can see the
-content of each package.
+content of each package. In order to maintain a clear overview, all captured packages can be deleted from wireshark's
+overview. Therefore, click the green `Restart Current Capture` Button in the Wireshark toolbar.
 
 ## Usage
 
-### Reading data
+### Stealing Passwords
 
-In order to simulate attacks connect in the browsers to the web application
-at http://localhost:8080/login. Login using user `joe` and password `s3cret`. You should be
-logged
-in now and see the secured content of the web application.
+When HTTP traffic is not encrypted, it is very easy for attackers to steal a password during the login process. In the
+following steps, we will emulate such attack.
 
-In Wireshark, find the package with the info `POST /login HTTP/1.1`. This is the HTTP post request which transmits the
-username and the password to the server. In the background, the server checks the validity of the credentials, and
-creates a new session for the browser. Click the package and find the HTML Form URL Encoded entry at the left bottom
-panel. You should now be able to see the credentials, you inserted in the browser. A potential attacker could use that
+1. Connect the browsers to the web application
+   at http://localhost:8080/login. Login with the user `joe` and the password `s3cret`. You should be logged in now and
+   see the secured content of the web application.
+2. In Wireshark, find the package with the info `POST /login HTTP/1.1`. This is the HTTP post request which transmits
+   the username and the password to the server. In the background, the server checks the validity of the credentials, and
+   creates a new session for the browser. Click the package and find the `HTML Form URL Encoded` entry at the left bottom
+   panel. You should now be able to see the credentials, you inserted in the browser. 
+
+A potential attacker could use that
 information to login in to-, and control the, the victim's account.
 
 _Since this method is very basic, most modern web application are protected against that by not transmitting the clear
 text, but an encrypted version of the password._
 
-Explore additional information by sending requests through the browser and analyzing the captured data in Wireshark. For
-example, attempt to transmit a confidential piece of information while logged in, noting that this data is also sent in
-plain text. Despite the user's expectation of security while being logged in, it's important to test whether the
-transmitted data remains secure and unreadable in the event of unauthorized interception or sniffing.
+[//]: # (Explore additional information by sending requests through the browser and analyzing the captured data in Wireshark. For)
+
+[//]: # (example, attempt to transmit a confidential piece of information while logged in, noting that this data is also sent in)
+
+[//]: # (plain text. Despite the user's expectation of security while being logged in, it's important to test whether the)
+
+[//]: # (transmitted data remains secure and unreadable in the event of unauthorized interception or sniffing.)
 
 ### Session Hijacking
 
@@ -77,12 +86,13 @@ Since the session ID is the only thing used by the server to identify a browser 
 authenticated account), stealing it enabled the attacker to impersonate the victim user.
 This is very helpful in scenarios, where the browser encrypts the password before transmission.
 
-1. Log in the web application at http://localhost:8080/login and capture any of the http packets which are sent from
+1. Log in the web application at http://localhost:8080/login and capture any http packets which are sent from
    the browser to the server.
 2. Find the http section in the wireshark's packet inspector called Hyper Transfer Protocol. In that section find the
    cookie section and open it. Here you can read all cookies that have been sent in that specific request. We are
    specifically interested in the cookie called JSESSIONID.
-   This is the session ID of our victim, which we can use to hijack their session. Copy the value of this cookie to your clipboard.
+   This is the session ID of our victim, which we can use to hijack their session. Copy the value of this cookie to your
+   clipboard.
 3. Open a new browser tab in private mode. In this mode, the browser does not share any cookies with the tabs.
    Therefore,
    in private mode, the browser is not logged in the application.
@@ -136,12 +146,13 @@ When the keystore has been created, we can restart the docker application with t
 Run the following command from the folder where `keystore.p12` is located:
 
 ```
-sudo docker run -v .:/cert -p 8443:8443 patricklindner/unsecured_webapp:1.0 
+docker run -v .:/cert -p 8443:8443 patricklindner/unsecured_webapp:1.0 
    --spring.profiles.active=https 
    --server.ssl.key-store=cert/keystore.p12 
    --server.ssl.key-store-password=<password to keystore.p12> 
    --server.ssl.key-alias=<your alias>
 ```
+
 <em> For some systems: replace .:/cert with "$(pwd)":/cert </em> 
 
 The HTTP traffic of the application is now encrypted and unreadable by potential attackers.
@@ -150,8 +161,10 @@ When accessing the app, your browser should issue a security warning about the u
 Browsers do only trust certificates which have been signed by a trusted central authority (CA). These CSa are hardcoded
 into the browser.
 Since our key is not signed by any CA, but by itself, the browser does not trust it. This does not make the connection
-less secure. The browser merely warns you that the origin of the certificate is not known. It could potentially be a faked website.
-When using HTTPS in production, you can let your key be signed by a central authority in order to make your certificate trustworthy.
+less secure. The browser merely warns you that the origin of the certificate is not known. It could potentially be a
+faked website.
+When using HTTPS in production, you can let your key be signed by a central authority in order to make your certificate
+trustworthy.
 Read more over CAs [here](https://www.digicert.com/blog/what-is-a-certificate-authority).
 
 In Wireshark, instead of filtering by http, change the filter setting to tls.
@@ -161,12 +174,15 @@ the contents of all data packets can not be read.
 # Exercises
 
 ## Reading Data
+
 **Q: How is the password presented? (format: .... ....: "password" = ........)**
 
-**Q: Follow the TCP trace of the request, what is the class of the button with value="Logout"? (format:"... ...-.......")**
+**Q: Follow the TCP trace of the request, what is the class of the button with value="Logout"? (
+format:"... ...-.......")**
 > Hint: UmlnaHQtY2xpY2sgb24gdGhlIHBhY2thZ2UgPiBGb2xsb3cgPiBUQ1Agc3RyZWFtLg==
 
 ## Session Hijacking
+
 **Q: How is the session cookie presented? (format: ...... ....: JSESSIONID=*)**
 
 **Q: What is the max age of the cookie?**
@@ -175,6 +191,7 @@ the contents of all data packets can not be read.
 **Q: What happens with the hijacked session when you logout in the original browser?**
 
 ## Stealing Private Data
+
 **Q: What is the key of the form item?**
 
 **Q: What is the protocol used to communicate the secret?**
@@ -182,6 +199,7 @@ the contents of all data packets can not be read.
 **Q: What is the HTTP method used to communicate the secret?**
 
 ## Secured Connection
+
 **Q: What country code is requested to create the keypair? (format: ...-......)**
 
 **Q: How many days is the generated key valid?**
