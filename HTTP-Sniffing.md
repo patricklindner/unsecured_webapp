@@ -134,7 +134,7 @@ In order to create those keys, we make use of javas keytool command line tool. W
 keytool -genkeypair -alias <a name for your key> -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore keystore.p12 -validity 3650
 ```
 
-This command creates an RSA key pair with the alias my_key and stores it in the output file keystore.p12 in
+This command creates an RSA key pair with your chosen alias and stores it in the output file keystore.p12 in
 industry standard PKCS12 format.
 
 After running the command, you have to define a password, that encrypts the keystore file. Furthermore, additional
@@ -188,7 +188,7 @@ format:"... ...-.......")**
 **Q: What is the max age of the cookie?**
 > Hint: VXNlIGRldmVsb3BlciB0b29scywgY2xpY2sgb24gdGhlIGNvb2tpZSBhbmQgZXhwbG9yZSB0aGUgYWRkaXRpb25hbCBpbmZv
 
-**Q: What happens with the hijacked session when you logout in the original browser?**
+**Q: What happens with the unauthorized session when you logout in the hijacked browser?**
 
 ## Stealing Private Data
 
