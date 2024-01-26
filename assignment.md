@@ -10,7 +10,9 @@ This lab will show you the risks of not securing your connections or using unsec
 The hints are encoded in base64. They can be decoded by using `echo <hint> | base64 -d` or
 with [online tools]('https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true,false)')
 
-# Setting up the Docker Container
+# Docker
+## Setup
+
 In order to run the vulnerable Web application, download and install docker on your machine (if not yet installed). The
 instructions can be found on the [docker website](https://docs.docker.com/engine/install/).
 When docker is installed and running in the background, run the following command in the command line:
@@ -158,15 +160,13 @@ the contents of all data packets can not be read.
 
 # Exercises
 
-## Sniff Data
-
-### Reading Data
+## Reading Data
 **Q: How is the password presented? (format: .... ....: "password" = ........)**
 
 **Q: Follow the TCP trace of the request, what is the class of the button with value="Logout"? (format:"... ...-.......")**
 > Hint: UmlnaHQtY2xpY2sgb24gdGhlIHBhY2thZ2UgPiBGb2xsb3cgPiBUQ1Agc3RyZWFtLg==
 
-### Session Hijacking
+## Session Hijacking
 **Q: How is the session cookie presented? (format: ...... ....: JSESSIONID=*)**
 
 **Q: What is the max age of the cookie?**
@@ -174,14 +174,14 @@ the contents of all data packets can not be read.
 
 **Q: What happens with the hijacked session when you logout in the original browser?**
 
-### Stealing private data
+## Stealing Private Data
 **Q: What is the key of the form item?**
 
 **Q: What is the protocol used to communicate the secret?**
 
 **Q: What is the HTTP method used to communicate the secret?**
 
-### Secured Connection
+## Secured Connection
 **Q: What country code is requested to create the keypair? (format: ...-......)**
 
 **Q: How many days is the generated key valid?**
