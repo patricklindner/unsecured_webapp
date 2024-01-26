@@ -1,7 +1,7 @@
 # Introduction
 
 During this lab you will be introduced to the security risks that aris when using non-secure connections. You will work
-with a locally hosted `Docker` container and `Wireshark`. Both tools are already installed on your Kali VM or can
+with a locally hosted `Docker` $$container and `Wireshark`. Both tools are already installed on your Kali VM or can
 easily be installed on both Windows and Linux.
 The web application hosted in the docker container, runs default without any encryption. While this is bad practice,
 numerous websites are still not using SSL based encryption and rather operate on unencrypted http connections.
@@ -11,7 +11,6 @@ The hints are encoded in base64. They can be decoded by using `echo <hint> | bas
 with [online tools]('https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true,false)')
 
 # Setting up the Docker Container
-
 In order to run the vulnerable Web application, download and install docker on your machine (if not yet installed). The
 instructions can be found on the [docker website](https://docs.docker.com/engine/install/).
 When docker is installed and running in the background, run the following command in the command line:
@@ -34,26 +33,11 @@ Completed initialization in <number of milliseconds> ms
 Afterward, the web application can be accessed using the browser
 on http://localhost:8080/login.
 
-## Usage
-
-Explain usage of tool.
-
-```
-this is a code block
-```
-
-| **Flag** | **Description** |
-|----------|-----------------|
-| `-h`     | Show help       |
-
-![show_image_here](test-image.png)
-
 # Wireshark
 
 ## Setup
 
-In order to inspect network traffic, we will use Wireshark. Download and install it on your machine (if not yet
-installed). See their [website](https://www.wireshark.org/download.html) for installation instructions. In order to
+In order to inspect network traffic, we will use Wireshark. Download and install it on your machine (installed on Kali already). See their [website](https://www.wireshark.org/download.html) for installation instructions. In order to
 listen to the
 traffic between the web application and your browser, run it as administrator and select the network loop back interface
 named `lo`. Type `http` in the filter bar, and access the web application
@@ -62,9 +46,6 @@ which are exchanged between the browser and the web application. Since the conne
 content of each package.
 
 ## Usage
-
-<!-- Uitleggen hoe het gebruikt kan worden om te sniffen. Introductie nodig om te sniffen hier. Bij vragen alleen de vragen denk? Dus hier ook uitleggen hoe cookies gekopieerd kunnnen worden -->
-<!-- Explain usage of tool. -->
 
 ### Reading data
 
@@ -99,7 +80,7 @@ This is very helpful in scenarios, where the browser encrypts the password befor
 2. Find the http section in the wireshark's packet inspector called Hyper Transfer Protocol. In that section find the
    cookie section and open it. Here you can read all cookies that have been sent in that specific request. We are
    specifically interested in the cookie called JSESSIONID.
-   This is the session ID of our victim, which we can use to hijack their session. Copy it to your clipboard.
+   This is the session ID of our victim, which we can use to hijack their session. Copy the value of this cookie to your clipboard.
 3. Open a new browser tab in private mode. In this mode, the browser does not share any cookies with the tabs.
    Therefore,
    in private mode, the browser is not logged in the application.
@@ -128,15 +109,7 @@ In this attack, w use the same sniffing technique for different data.
    the
    secret private data from the textbox, can easily be red by the attacker.
 
-# Exercises
-
-## Sniff Data
-
-<!-- Vragen bedenken hoe we kunnen controleren dat er gesniffed is met wireshark -->
-**Q: What is the**
-> Hint: something in base64.
-
-## Secured Connection
+# Secured Connection
 
 We now know, how easily unencrypted HTTP packets can be sniffed by a potential attacker. Let us prevent the three
 attacks by encrypting the data traffic. In order to encrypt HTTP packets, we make use of Transport Layer Security (TLS),
@@ -167,6 +140,7 @@ sudo docker run -v .:/cert -p 8443:8443 patricklindner/unsecured_webapp:1.0
    --server.ssl.key-store-password=<password to keystore.p12> 
    --server.ssl.key-alias=<your alias>
 ```
+<em> For some systems: replace .:/cert with "$(pwd)":/cert </em> 
 
 The HTTP traffic of the application is now encrypted and unreadable by potential attackers.
 Verify this by repeating the three attacks. The application is now accessible at https://localhost:8443.
@@ -182,14 +156,43 @@ In Wireshark, instead of filtering by http, change the filter setting to tls.
 You can now see all encrypted data packets. Since wireshark (the potential attacker) does not know the encryption key,
 the contents of all data packets can not be read.
 
-# Additional info on using unsecure connections
+# Exercises
 
-<!-- Hier misschien extra info schrijven, zodat er nog meer geleerd wordt -->
+## Sniff Data
+
+### Reading Data
+**Q: How is the password presented? (format: .... ....: "password" = ........)**
+
+**Q: Follow the TCP trace of the request, what is the class of the button with value="Logout"? (format:"... ...-.......")**
+> Hint: UmlnaHQtY2xpY2sgb24gdGhlIHBhY2thZ2UgPiBGb2xsb3cgPiBUQ1Agc3RyZWFtLg==
+
+### Session Hijacking
+**Q: How is the session cookie presented? (format: ...... ....: JSESSIONID=*)**
+
+**Q: What is the max age of the cookie?**
+> Hint: VXNlIGRldmVsb3BlciB0b29scywgY2xpY2sgb24gdGhlIGNvb2tpZSBhbmQgZXhwbG9yZSB0aGUgYWRkaXRpb25hbCBpbmZv
+
+**Q: What happens with the hijacked session when you logout in the original browser?**
+
+### Stealing private data
+**Q: What is the key of the form item?**
+
+**Q: What is the protocol used to communicate the secret?**
+
+**Q: What is the HTTP method used to communicate the secret?**
+
+### Secured Connection
+**Q: What country code is requested to create the keypair? (format: ...-......)**
+
+**Q: How many days is the generated key valid?**
+
+**Q: What is the Signature Algorithm of the certificate? (format: ...-... .... ... ..........)**
+> Hint: R28gdG8gdGhlIGJyb3dzZXIsIGluIHRoZSBhZGRyZXNzIGJhciBjbGljayBvbiB0aGUgbG9jay4gVmlldyB0aGUgY2VydGlmaWNhdGUu
+
+**Q: Redo the attacks and read the data. What is the protocol now?**
 
 # Additional material
 
-- [Link](http://google.com)
-
-# Other useful tools
-
-- [Link](http://google.com)
+- [Certifate Authority](https://www.digicert.com/blog/what-is-a-certificate-authority)
+- [TLS vs SSL](https://kinsta.com/knowledgebase/tls-vs-ssl/)
+- [FTP](https://www.cerberusftp.com/blog/how-secure-is-ftp-how-you-can-mitigate-the-risks-of-using-file-transfer-protocol/)
